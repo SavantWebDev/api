@@ -8,6 +8,8 @@ const apiController = require('./v1/api')
 const session = require('express-session')
 const bodyParser = require('body-parser')
 
+const cors = require('cors')
+
 app.use(session({
     secret: process.env.SECRET,
     resave: false,
@@ -20,6 +22,8 @@ app.use(bodyParser.json())
 
 app.use('/', userController)
 app.use('/', apiController)
+
+app.use(cors())
 
 app.listen(PORT, () => {
     console.log('Servidor rodando na porta '+ PORT)
