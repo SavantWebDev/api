@@ -20,10 +20,10 @@ app.use(session({
 app.use(bodyParser.urlencoded())
 app.use(bodyParser.json())
 
+app.use(cors())
+
 app.use('/', userController)
 app.use('/', apiController)
-
-app.use(cors())
 
 app.listen(PORT, () => {
     console.log('Servidor rodando na porta '+ PORT)
