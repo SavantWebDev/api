@@ -8,15 +8,19 @@ router.get(routerbase + '/noticias', async (req, res) => {
     await knex.raw(`
         SELECT convert_from(images, 'UTF8') as file, titulo, descricao, id, conteudo FROM tb_noticias ORDER BY id DESC LIMIT 5
     `).then( resp => {
-        res.json(
-            {
-                id: resp.rows[0].id,
-                titulo: resp.rows[0].titulo,
-                descricao: resp.rows[0].descricao,
-                conteudo: resp.rows[0].conteudo,
-                image: resp.rows[0].file
-            }
-        )
+        if(resp.rows[0] == undefined){
+            res.status(404).json(
+                {
+                    response: "Nenhuma Notícia Registrada"
+                }
+            )
+        }else{
+            res.json(
+                {
+                    response: resp.rows
+                }
+            )
+        }
     })
     .catch(e => res.json({error: e}))
 })
@@ -27,15 +31,20 @@ router.get(routerbase + '/noticia/:id', async (req, res) => {
     await knex.raw(`
     SELECT convert_from(images, 'UTF8') as file, titulo, descricao, id, conteudo FROM tb_noticias WHERE id = ${id.id}
     `).then( resp => {
-        res.json(
-            {
-                id: resp.rows[0].id,
-                titulo: resp.rows[0].titulo,
-                descricao: resp.rows[0].descricao,
-                conteudo: resp.rows[0].conteudo,
-                image: resp.rows[0].file
-            }
-        )
+        if(resp.rows[0] == undefined){
+            res.status(404).json(
+                {
+                    response: 'Not Found News With id ' + id.id
+                }
+            )
+        }else{
+            res.json(
+                {
+                    response: resp.rows
+                }
+            )
+        }
+        
     })
     .catch(e => res.status(404).json({msg: 'not found news with id ' + id.id}))
 })
