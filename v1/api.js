@@ -50,6 +50,7 @@ router.get(routerbase + '/noticia/:id', async (req, res) => {
 })
 
 router.post(routerbase + '/add/noticia', async (req, res) => {
+    console.log('Realizando requisição')
     var {titulo, descricao, conteudo} = req.body
     let matches = req.body.base64image.match(/^data:([A-Za-z-+\/]+);base64,(.+)$/) || req.body.base64image.match(/^data:@([A-Za-z-+\/]+);base64,(.+)$/);
     let response = {}
@@ -58,7 +59,22 @@ router.post(routerbase + '/add/noticia', async (req, res) => {
     response.data = new Buffer.from(matches[2], 'base64');
     await knex.raw(`INSERT INTO tb_noticias (titulo, images, descricao, conteudo) VALUES ('${titulo}', '${matches[2]}', '${descricao}', '${conteudo}')`)
     .then(() => {res.json({msg: "success"})})
-    .catch(() => res.status(401).json({msg: 'Unhauthorized'}))
+    .catch(e => {
+        console.log(e)
+        res.status(401).json({msg: 'Unhauthorized'})
+    })
+})
+
+router.get(routerbase + '/noticias/list', async(req, res) => {
+    var page = req.query
+
+    console.log(page.page)
+    
+    await knex.raw(`
+        SELECT * FROM tb_noticias ORDER BY id DESC LIMIT 5 OFFSET 5
+    `).then( resp => {
+        console.log(resp)
+    })
 })
 
 module.exports = router

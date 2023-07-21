@@ -17,10 +17,12 @@ app.use(session({
     cookie: { maxAge: 3600000 }
 }))
 
-app.use(bodyParser.urlencoded())
-app.use(bodyParser.json())
+app.use(bodyParser.urlencoded({limit: "50mb", extended: true, parameterLimit: 50000}))
+app.use(bodyParser.json({limit: "50mb", extended: true, parameterLimit: 50000}))
 
-app.use(cors())
+app.use(cors({
+    origin: "*"
+}))
 
 app.use('/', userController)
 app.use('/', apiController)
