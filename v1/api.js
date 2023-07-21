@@ -68,12 +68,20 @@ router.post(routerbase + '/add/noticia', async (req, res) => {
 router.get(routerbase + '/noticias/list', async(req, res) => {
     var page = req.query
 
-    console.log(page.page)
+    const limite = 5
+
+    var pg = 5 * page.page
+
+    console.log(pg)
     
     await knex.raw(`
-        SELECT * FROM tb_noticias ORDER BY id DESC LIMIT 5 OFFSET 5
+    SELECT id, titulo, descricao, conteudo, convert_from(images, 'UTF8') as file FROM tb_noticias ORDER BY id DESC LIMIT ${limite} OFFSET ${pg}
     `).then( resp => {
-        console.log(resp)
+        if(resp.rows[0] == undefined){
+            res.status(404).json({response: "Not Found!"})
+        }else{
+            res.status(201).json({response: resp.rows})
+        }
     })
 })
 
