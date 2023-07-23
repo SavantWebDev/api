@@ -72,31 +72,37 @@ router.get(routerbase + '/noticias/list', async(req, res) => {
 
     const limite = 5
 
-    console.log(pg)
-
     var totalPage = await knex.raw(`
         SELECT CEILING(cast(count(*) as numeric(18, 2)) / cast(${limite} as numeric(18, 2))) as totalPage FROM tb_noticias
     `);
 
-    page.page > totalPage.rows[0].totalpage ? page.page = totalPage.rows[0].totalpage : page.page;
+    const totalDePaginas = totalPage.rows[0].totalpage
+
+    page.page > totalDePaginas ? page.page = totalDePaginas : page.page;
 
     var pg = 5 * (page.page - 1)
+    console.log(pg)
+
+    if(totalDePaginas == 0){
+        res.status(404).json({msg: "No data was found!"})
+    }else{
+        await knex.raw(`
+            SELECT id, titulo, descricao, conteudo, convert_from(images, 'UTF8') as file FROM tb_noticias ORDER BY id DESC LIMIT ${limite} OFFSET ${pg}
+        `).then( resp => {
+            if(resp.rows[0] == undefined){
+                res.status(404).json({response: "Not Found!"})
+            }else{
+                console.log(totalDePaginas)
+                res.status(201).json(
+                    {
+                        response: resp.rows,
+                        pagina_atual: page.page,
+                        total_paginas: totalDePaginas
+                    })
+            }
+        })
+    }
     
-    await knex.raw(`
-        SELECT id, titulo, descricao, conteudo, convert_from(images, 'UTF8') as file FROM tb_noticias ORDER BY id DESC LIMIT ${limite} OFFSET ${pg}
-    `).then( resp => {
-        if(resp.rows[0] == undefined){
-            res.status(404).json({response: "Not Found!"})
-        }else{
-            console.log(totalPage.rows[0].totalpage)
-            res.status(201).json(
-                {
-                    response: resp.rows,
-                    pagina_atual: pg + 1,
-                    total_paginas: totalPage.rows[0].totalpage
-                })
-        }
-    })
 })
 
 router.delete(routerbase + '/delete', async (req, res) => {
