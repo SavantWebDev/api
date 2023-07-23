@@ -68,21 +68,46 @@ router.post(routerbase + '/add/noticia', async (req, res) => {
 router.get(routerbase + '/noticias/list', async(req, res) => {
     var page = req.query
 
+    page.page < 1 ? page.page = 1 : page.page
+
     const limite = 5
 
-    var pg = 5 * page.page
-
     console.log(pg)
+
+    var totalPage = await knex.raw(`
+        SELECT CEILING(cast(count(*) as numeric(18, 2)) / cast(${limite} as numeric(18, 2))) as totalPage FROM tb_noticias
+    `);
+
+    page.page > totalPage.rows[0].totalpage ? page.page = totalPage.rows[0].totalpage : page.page;
+
+    var pg = 5 * (page.page - 1)
     
     await knex.raw(`
-    SELECT id, titulo, descricao, conteudo, convert_from(images, 'UTF8') as file FROM tb_noticias ORDER BY id DESC LIMIT ${limite} OFFSET ${pg}
+        SELECT id, titulo, descricao, conteudo, convert_from(images, 'UTF8') as file FROM tb_noticias ORDER BY id DESC LIMIT ${limite} OFFSET ${pg}
     `).then( resp => {
         if(resp.rows[0] == undefined){
             res.status(404).json({response: "Not Found!"})
         }else{
-            res.status(201).json({response: resp.rows})
+            console.log(totalPage.rows[0].totalpage)
+            res.status(201).json(
+                {
+                    response: resp.rows,
+                    pagina_atual: pg + 1,
+                    total_paginas: totalPage.rows[0].totalpage
+                })
         }
     })
+})
+
+router.delete(routerbase + '/delete', async (req, res) => {
+    var id = req.query
+
+    await knex.raw(`
+        DELETE FROM tb_noticias WHERE id = ${id.id}
+    `).then(() => {
+        res.status(200).json({msg: "Success"})
+    })
+    .catch(() => res.status(401).json({msg: "Unhauthorized"}))
 })
 
 module.exports = router
