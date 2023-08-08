@@ -6,7 +6,7 @@ const knex = require('../Database/connection')
 
 router.get(routerbase + '/noticias', async (req, res) => {
     await knex.raw(`
-        SELECT convert_from(images, 'UTF8') as file, titulo, descricao, id, conteudo FROM tb_noticias ORDER BY id DESC LIMIT 5
+        SELECT convert_from(images, 'UTF8') as file, data_public, titulo, descricao, id, conteudo FROM tb_noticias ORDER BY id DESC LIMIT 5
     `).then( resp => {
         if(resp.rows[0] == undefined){
             res.status(404).json(
@@ -29,7 +29,7 @@ router.get(routerbase + '/noticia/:id', async (req, res) => {
     var id = req.params
 
     await knex.raw(`
-    SELECT convert_from(images, 'UTF8') as file, titulo, descricao, id, conteudo FROM tb_noticias WHERE id = ${id.id}
+    SELECT convert_from(images, 'UTF8') as file, data_public, titulo, descricao, id, conteudo FROM tb_noticias WHERE id = ${id.id}
     `).then( resp => {
         if(resp.rows[0] == undefined){
             res.status(404).json(
@@ -54,10 +54,13 @@ router.post(routerbase + '/add/noticia', async (req, res) => {
     var {titulo, descricao, conteudo} = req.body
     let matches = req.body.base64image.match(/^data:([A-Za-z-+\/]+);base64,(.+)$/) || req.body.base64image.match(/^data:@([A-Za-z-+\/]+);base64,(.+)$/);
     let response = {}
+    var date = new Date()
+    var time = `${date.getHours()}:${date.getMinutes()}:${date.getSeconds()}.000000`
 
     response.type = matches[1]
+    console.log(response.type)
     response.data = new Buffer.from(matches[2], 'base64');
-    await knex.raw(`INSERT INTO tb_noticias (titulo, images, descricao, conteudo) VALUES ('${titulo}', '${matches[2]}', '${descricao}', '${conteudo}')`)
+    await knex.raw(`INSERT INTO tb_noticias (titulo, images, descricao, conteudo, data_public) VALUES ('${titulo}', '${matches[2]}', '${descricao}', '${conteudo}', '${time}')`)
     .then(() => {res.json({msg: "success"})})
     .catch(e => {
         console.log(e)
@@ -81,18 +84,16 @@ router.get(routerbase + '/noticias/list', async(req, res) => {
     page.page > totalDePaginas ? page.page = totalDePaginas : page.page;
 
     var pg = 5 * (page.page - 1)
-    console.log(pg)
 
     if(totalDePaginas == 0){
         res.status(404).json({msg: "No data was found!"})
     }else{
         await knex.raw(`
-            SELECT id, titulo, descricao, conteudo, convert_from(images, 'UTF8') as file FROM tb_noticias ORDER BY id DESC LIMIT ${limite} OFFSET ${pg}
+            SELECT id, titulo, descricao, conteudo, data_public, convert_from(images, 'UTF8') as file FROM tb_noticias ORDER BY id DESC LIMIT ${limite} OFFSET ${pg}
         `).then( resp => {
             if(resp.rows[0] == undefined){
                 res.status(404).json({response: "Not Found!"})
             }else{
-                console.log(totalDePaginas)
                 res.status(201).json(
                     {
                         response: resp.rows,
@@ -101,8 +102,32 @@ router.get(routerbase + '/noticias/list', async(req, res) => {
                     })
             }
         })
+        .catch( e => {
+            console.log(e)
+            res.status(404).json({msg: "Unhauthorized"})
+        })
     }
     
+})
+
+router.put(routerbase + '/edit', async(req, res) => {
+    var id = req.query
+    var { teste } = req.body
+
+    var exist = await knex.raw(`
+        SELECT * FROM tb_noticias WHERE id = ${id.id}
+    `)
+
+    console.log(exist.rows[0])
+    console.log(id.id)
+    console.log(teste)
+
+    if(exist.rows[0] == undefined){
+        console.log('Não Existe')
+    }else{
+        console.log('Existe')
+    }
+
 })
 
 router.delete(routerbase + '/delete', async (req, res) => {
