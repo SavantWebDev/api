@@ -7,7 +7,11 @@ const knex = require('../Database/connection')
 
 router.get(routerbase + '/noticias', async (req, res) => {
     await knex.raw(`
-        SELECT convert_from(images, 'UTF8') as file, data_public, titulo, descricao, id, conteudo FROM tb_noticias ORDER BY id DESC LIMIT 5
+        SELECT convert_from(images, 'UTF8') as file,
+        CAST(data_public as date) as pub_date, 
+        CAST(data_public as time) as pub_time, 
+        titulo, descricao, id, conteudo 
+        FROM tb_noticias ORDER BY id DESC LIMIT 5
     `).then( resp => {
         if(resp.rows[0] == undefined){
             res.status(404).json(
@@ -98,7 +102,8 @@ router.get(routerbase + '/noticias/list', async(req, res) => {
         res.status(404).json({msg: "No data was found!"})
     }else{
         await knex.raw(`
-            SELECT id, titulo, descricao, conteudo, data_public, convert_from(images, 'UTF8') as file FROM tb_noticias ORDER BY id DESC LIMIT ${limite} OFFSET ${pg}
+            SELECT id, titulo, descricao, conteudo, CAST(data_public as date) as pub_date, 
+            CAST(data_public as time) as pub_time, convert_from(images, 'UTF8') as file FROM tb_noticias ORDER BY id DESC LIMIT ${limite} OFFSET ${pg}
         `).then( resp => {
             if(resp.rows[0] == undefined){
                 res.status(404).json({response: "Not Found!"})
