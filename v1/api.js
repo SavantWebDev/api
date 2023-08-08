@@ -1,4 +1,5 @@
 const express = require('express')
+const moment = require('moment')
 const router = express.Router()
 const routerbase = '/v1/api'
 
@@ -54,13 +55,14 @@ router.post(routerbase + '/add/noticia', async (req, res) => {
     var {titulo, descricao, conteudo} = req.body
     let matches = req.body.base64image.match(/^data:([A-Za-z-+\/]+);base64,(.+)$/) || req.body.base64image.match(/^data:@([A-Za-z-+\/]+);base64,(.+)$/);
     let response = {}
+    var today = moment().format('YYYY-MM-DD')
     var date = new Date()
     var time = `${date.getHours()}:${date.getMinutes()}:${date.getSeconds()}.000000`
 
     response.type = matches[1]
     console.log(response.type)
     response.data = new Buffer.from(matches[2], 'base64');
-    await knex.raw(`INSERT INTO tb_noticias (titulo, images, descricao, conteudo, data_public) VALUES ('${titulo}', '${matches[2]}', '${descricao}', '${conteudo}', '${time}')`)
+    await knex.raw(`INSERT INTO tb_noticias (titulo, images, descricao, conteudo, data_public) VALUES ('${titulo}', '${matches[2]}', '${descricao}', '${conteudo}', '${today} ${time}')`)
     .then(() => {res.json({msg: "success"})})
     .catch(e => {
         console.log(e)
