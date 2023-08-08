@@ -30,7 +30,15 @@ router.get(routerbase + '/noticia/:id', async (req, res) => {
     var id = req.params
 
     await knex.raw(`
-    SELECT convert_from(images, 'UTF8') as file, data_public, titulo, descricao, id, conteudo FROM tb_noticias WHERE id = ${id.id}
+    SELECT CAST(data_public as date) as pub_date, 
+    CAST(data_public as time) as pub_time, 
+    titulo, 
+    descricao, 
+    id, 
+    conteudo,
+    convert_from(images, 'UTF8') as file
+    FROM tb_noticias 
+    WHERE id = ${id.id}
     `).then( resp => {
         if(resp.rows[0] == undefined){
             res.status(404).json(
@@ -39,6 +47,7 @@ router.get(routerbase + '/noticia/:id', async (req, res) => {
                 }
             )
         }else{
+            console.log(resp.rows[0].pub_date + ' - ' + resp.rows[0].pub_time)
             res.json(
                 {
                     response: resp.rows
