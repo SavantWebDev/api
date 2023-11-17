@@ -7,6 +7,7 @@ const userController = require('./controller/userController')
 const apiController = require('./v1/api')
 const session = require('express-session')
 const bodyParser = require('body-parser')
+const path = require('path')
 
 const cors = require('cors')
 
@@ -16,6 +17,11 @@ app.use(session({
     saveUninitialized: true,
     cookie: { maxAge: 3600000 }
 }))
+
+app.use(express.static('public'))
+app.use('/src', express.static(__dirname + '/public/src'))
+app.set('views', path.join(__dirname + '/views'))
+app.set('view engine', 'ejs')
 
 app.use(bodyParser.urlencoded({limit: "50mb", extended: true, parameterLimit: 50000}))
 app.use(bodyParser.json({limit: "50mb", extended: true, parameterLimit: 50000}))
